@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="@dimen/title_margin"
+    android:background="@color/layoutBackGround"
+    android:orientation="vertical"
+    android:padding="@dimen/title_margin">
+
+    <TextView
+        android:id="@+id/todo_task_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="17日上午任务"
+        android:textSize="10pt" />
+
+    <TextView
+        android:id="@+id/todo_task_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/title_margin"
+        android:text="任务详情"
+        android:textSize="8pt" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/todo_task_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="提交任务"
+            android:background="@drawable/begin_background"/>
+
+        <Button
+            android:id="@+id/todo_task_begin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="开始巡查"
+            android:background="@drawable/begin_background" />
+    </RelativeLayout>
+
+
+
+</LinearLayout>
