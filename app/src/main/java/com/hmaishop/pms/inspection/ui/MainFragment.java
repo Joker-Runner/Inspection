@@ -26,7 +26,6 @@ import com.hmaishop.pms.inspection.bean.MyLatLng;
 import com.hmaishop.pms.inspection.bean.Photo;
 import com.hmaishop.pms.inspection.bean.SubTask;
 import com.hmaishop.pms.inspection.bean.Task;
-import com.hmaishop.pms.inspection.bean.ToDoTask;
 import com.hmaishop.pms.inspection.database.DatabaseManager;
 import com.hmaishop.pms.inspection.service.LocationService;
 import com.hmaishop.pms.inspection.util.CompressPicture;
@@ -98,8 +97,6 @@ public class MainFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 int k = 0;
-                // 是否已经开始巡查
-//                if (sharedPreferences.getBoolean(toDoTaskId + "", false)) {
                 for (SubTask subTask : databaseManager.querySubTasks(toDoTaskId)) {
                     if (!subTask.isHaveDone()) {
                         k++;
@@ -144,29 +141,8 @@ public class MainFragment extends Fragment {
                     });
                     alertDialog.show();
                 }
-//                } else {
-//                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
-//                    alertDialog.setIcon(R.drawable.ic_warning_black_24dp);
-//                    alertDialog.setTitle(" 警告！");
-//                    alertDialog.setMessage("您还没有开始巡查");
-//                    alertDialog.setCancelable(true);
-//                    alertDialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialogInterface, int i) {
-//
-//                        }
-//                    });
-//                    alertDialog.show();
-//                }
             }
         });
-
-//        showList.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                mainActivity.refreshActivity(Constants.SHOW_LIST);
-//            }
-//        });
         return view;
     }
 
@@ -202,16 +178,6 @@ public class MainFragment extends Fragment {
             }
         }
 
-        //
-//        for (SubTask subtask : subTaskList) {
-//            for (Task task : databaseManager.queryTasks(subtask)) {
-//                for (Photo photo : databaseManager.queryPhoto(task)) {
-//                    photo.setPhotoId(photo.getPhotoId().substring(photo.getPhotoId().
-//                            indexOf(photo.getId() + "/")));
-//                    photoList.add(photo);
-//                }
-//            }
-//        }
 
         String latLngString = new Gson().toJson(myLatLngList);//LatLng
         String subTaskString = new Gson().toJson(subTaskList);//SubTask
