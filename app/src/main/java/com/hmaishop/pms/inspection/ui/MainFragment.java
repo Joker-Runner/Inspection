@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.hmaishop.pms.inspection.R;
@@ -229,13 +228,10 @@ public class MainFragment extends Fragment {
                     message1.obj = file;
                     handler.sendMessage(message1);
 
-//                    Message message2 = new Message();    // 刷新列表
-//                    message2.arg1 = 2;
-//                    handler.sendMessage(message2);
                 } else {
-                    Message message3 = new Message();    // 任务提交失败
-                    message3.arg1 = 3;
-                    handler.sendMessage(message3);
+                    Message message2 = new Message();    // 任务提交失败
+                    message2.arg1 = 2;
+                    handler.sendMessage(message2);
                 }
             }
         }.start();
@@ -284,11 +280,23 @@ public class MainFragment extends Fragment {
                     databaseManager.deleteSubTasks(msg.arg2);
                     editor.remove(msg.arg2 + "").commit();  // 移除
                     break;
-                case 2: // 返回任务列表
-                    getActivity().finish();
-                    break;
-                case 3: // 任务提交失败
-                    Toast.makeText(getContext().getApplicationContext(), "提交失败，请重新提交", Toast.LENGTH_LONG).show();
+                case 2: // 任务提交失败
+                    AlertDialog.Builder builder1 = new AlertDialog.Builder(getContext());
+                    builder1.setTitle("提交失败");
+                    builder1.setCancelable(true);
+                    builder1.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    });
+                    builder1.setPositiveButton("重新提交", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            uploadTasks(toDoTaskId);
+                        }
+                    });
+                    builder1.show();
+                    progressDialog.cancel();
                     break;
                 default:
                     break;
