@@ -1,11 +1,15 @@
 package com.hmaishop.pms.inspection.ui;
 
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
@@ -36,6 +40,9 @@ import java.util.List;
  */
 public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
 
+    TextView textView;
+    MyReceiver myReceiver;
+
     private SwipeRefreshLayout swipeRefreshLayout;
     private ListView todoTaskListView;
     private ToDoTaskAdapter toDoTaskAdapter;
@@ -51,24 +58,25 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
 
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
+        textView = (TextView) findViewById(R.id.none_task);
         todoTaskListView = (ListView) findViewById(R.id.todo_task_list);
         databaseManager = new DatabaseManager(this);
 
+        myReceiver = new MyReceiver();
 
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setColorSchemeColors(getResources().getColor(android.R.color.holo_blue_bright),
                 getResources().getColor(android.R.color.holo_green_light),
                 getResources().getColor(android.R.color.holo_orange_light),
                 getResources().getColor(android.R.color.holo_red_light));
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        IntentFilter intentFilter = new IntentFilter("Broadcast_NewTask");
+        registerReceiver(myReceiver, intentFilter);
         initListView();
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.cancelAll();
     }
 
     public void onRefresh() {
@@ -85,26 +93,40 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
      */
     public void initListView() {
         swipeRefreshLayout.setRefreshing(true);
+        /**
+         * 取消所有通知
+         */
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancelAll();
+
         new Thread() {
             @Override
             public void run() {
                 super.run();
-                try {
-                    int checkerId = sharedPreferences.getInt(Constants.CHECKER_ID, -1);
-                    HttpUtil httpUtil = new HttpUtil(Constants.IP, 3000);
-                    Log.d("TAG ToDoTask...", httpUtil.getMission(checkerId));
+
+                int checkerId = sharedPreferences.getInt(Constants.CHECKER_ID, -1);
+                HttpUtil httpUtil = new HttpUtil(Constants.IP, 3000);
+                String missionJson = httpUtil.getMission(checkerId);
+                if (missionJson == null) {
+                    Message message = new Message();
+                    message.arg1 = 2;
+                    handler.sendMessage(message);
+                } else if (missionJson.equals("fail")) {
+                    Message message = new Message();
+                    message.arg1 = 2;
+                    handler.sendMessage(message);
+                } else {
+                    Log.d("TAG ToDoTask...", missionJson);
                     Type listType = new TypeToken<ArrayList<ToDoTask>>() {
                     }.getType();
                     GsonBuilder gsonBuilder = new GsonBuilder();
                     gsonBuilder.setDateFormat(Constants.DATE_FORMAT);
                     Gson gson = gsonBuilder.create();
-                    ArrayList<ToDoTask> toDoTasks = gson.fromJson(httpUtil.getMission
-                            (checkerId), listType);
+                    ArrayList<ToDoTask> toDoTasks = gson.fromJson(missionJson, listType);
                     Message message = new Message();
+                    message.arg1 = 1;
                     message.obj = toDoTasks;
                     handler.sendMessage(message);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }.start();
@@ -112,22 +134,43 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
     }
 
     /**
-     * 处理得到的ToDoTask 初始化列表
+     * 1.处理得到的ToDoTask 初始化列表
+     * 2.获取任务失败
      */
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (msg.obj == null) {
-                ((TextView) findViewById(R.id.none_task)).setText("没有任务");
-            } else {
-                toDoTaskAdapter = new ToDoTaskAdapter(ToDoTaskActivity.this, (List<ToDoTask>) msg.obj,
-                        R.layout.todo_task_item, databaseManager, sharedPreferences);
-                todoTaskListView.setAdapter(toDoTaskAdapter);
-                setListViewHeightBasedOnChildren(todoTaskListView);
+            switch (msg.arg1) {
+                case 1: //获取任务成功
+                    List<ToDoTask> toDoTaskList = (List<ToDoTask>) msg.obj;
+                    if (toDoTaskList.size() == 0) {
+                        todoTaskListView.setVisibility(View.INVISIBLE);
+                        textView.setVisibility(View.VISIBLE);
+                        textView.setText("没有任务");
+                    } else {
+                        textView.setVisibility(View.INVISIBLE);
+                        todoTaskListView.setVisibility(View.VISIBLE);
+                        toDoTaskAdapter = new ToDoTaskAdapter(ToDoTaskActivity.this, toDoTaskList,
+                                R.layout.todo_task_item, databaseManager, sharedPreferences);
+                        todoTaskListView.setAdapter(toDoTaskAdapter);
+                        setListViewHeightBasedOnChildren(todoTaskListView);
+                    }
+                    break;
+                case 2: //获取任务失败
+                    Snackbar.make(textView, "获取任务失败、请下拉重新获取", Snackbar.LENGTH_LONG).show();
+                    break;
+                default:
+                    break;
             }
         }
     };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(myReceiver);
+    }
 
     @Override
     protected void onDestroy() {
@@ -142,6 +185,15 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
     public void onBackPressed() {
         super.onBackPressed();
         ActivityCollector.finishAll();
+    }
+
+    class MyReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("TAG", "收到广播...");
+            initListView();
+        }
     }
 
     /**

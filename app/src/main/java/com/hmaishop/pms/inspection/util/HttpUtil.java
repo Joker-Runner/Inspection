@@ -2,6 +2,7 @@ package com.hmaishop.pms.inspection.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -12,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -41,43 +41,62 @@ public class HttpUtil {
     /**
      * 登录
      *
-     * @param meid
-     * @return
-     * @throws IOException
+     * @param meid //
+     * @return 服务端返回值
      */
-    public String login(String meid) throws IOException {
+    public String login(String meid) {
         String jsonMsg = "{\"MEID\":\"" + meid + "\",\"device\":\"android\"}";
-        mUrl = new URL(mServerPath + "/checkerinfo");
-        mConn = (HttpURLConnection) mUrl.openConnection();
-        //设置请求头信息
-        setConnectConf();
-        //发送数据
-        int code = sendmsg(jsonMsg);
-        //读取反馈数据
-        if (code == 200) {
-            return readResponse();
+        try {
+            mUrl = new URL(mServerPath + "/checkerinfo");
+            mConn = (HttpURLConnection) mUrl.openConnection();
+            //设置请求头信息
+            setConnectConf();
+            //发送数据
+            int code = sendmsg(jsonMsg);
+            //读取反馈数据
+            if (code == 200) {
+                return readResponse();
+            } else {
+                return Constants.HTTP_EXCEPTION;
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        return null;
     }
 
     /**
      * 获取待办任务
      *
-     * @param userId
-     * @return
-     * @throws IOException
+     * @param userId 用户ID
+     * @return //
      */
-    public String getMission(int userId) throws IOException {
+    public String getMission(int userId) {
         String jsonMsg = "{\"num\":\"" + userId + "\"}";
-        mUrl = new URL(mServerPath + "/mission");
-        mConn = (HttpURLConnection) mUrl.openConnection();
+        try {
+            mUrl = new URL(mServerPath + "/mission");
+            mConn = (HttpURLConnection) mUrl.openConnection();
 
-        setConnectConf();
-        int code = sendmsg(jsonMsg);
-        if (code == 200) {
-            return readResponse();
+            setConnectConf();
+            int code = sendmsg(jsonMsg);
+            if (code == 200) {
+                return readResponse();
+            } else {
+                return Constants.HTTP_EXCEPTION;
+            }
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        return null;
     }
 
     /**
@@ -87,17 +106,29 @@ public class HttpUtil {
      * @return
      * @throws IOException
      */
-    public String getSubkey(int missId) throws IOException {
+    public String getSubkey(int missId) {
         String jsonMsg = "{\"mid\":\"" + missId + "\"}";
-        mUrl = new URL(mServerPath + "/subkey");
-        mConn = (HttpURLConnection) mUrl.openConnection();
+        try {
+            mUrl = new URL(mServerPath + "/subkey");
+            mConn = (HttpURLConnection) mUrl.openConnection();
 
-        setConnectConf();
-        int code = sendmsg(jsonMsg);
-        if (code == 200) {
-            return readResponse();
+            setConnectConf();
+            int code = sendmsg(jsonMsg);
+            if (code == 200) {
+                return readResponse();
+            } else {
+                return Constants.HTTP_EXCEPTION;
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        return null;
     }
 
     /**
@@ -107,33 +138,45 @@ public class HttpUtil {
      * @return
      * @throws IOException
      */
-    public String getDetail(int todoTaskId, int subId) throws IOException {
+    public String getDetail(int todoTaskId, int subId) {
         String jsonMsg = "{\"did\":\"" + subId + "\",\"mid\":\"" + todoTaskId + "\"}";
-        mUrl = new URL(mServerPath + "/detail");
-        mConn = (HttpURLConnection) mUrl.openConnection();
-
-        setConnectConf();
-        int code = sendmsg(jsonMsg);
-        if (code == 200) {
-            return readResponse();
+        try {
+            mUrl = new URL(mServerPath + "/detail");
+            mConn = (HttpURLConnection) mUrl.openConnection();
+            setConnectConf();
+            int code = sendmsg(jsonMsg);
+            if (code == 200) {
+                return readResponse();
+            }else {
+                return Constants.HTTP_EXCEPTION;
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        return "nothing";
     }
 
     /**
      * 开始巡查后，给服务端发送通知
+     *
      * @param todoTaskId 开始巡查的任务ID
      * @return
      */
     public String start(int todoTaskId) {
-		String jsonMsg = "";
-		try {
-            mUrl = new URL(mServerPath+"/start");
-            mConn = (HttpURLConnection)mUrl.openConnection();
+        String jsonMsg = todoTaskId + "";
+        try {
+            mUrl = new URL(mServerPath + "/start");
+            mConn = (HttpURLConnection) mUrl.openConnection();
 
             setConnectConf();
-            int code = sendmsg(todoTaskId+"");
-            if(code == 200){
+            int code = sendmsg(jsonMsg);
+            if (code == 200) {
                 return readResponse();
             }
         } catch (ProtocolException e) {
@@ -148,6 +191,7 @@ public class HttpUtil {
 
     /**
      * 发送任务报告
+     *
      * @param string 发送的任务报告Json串
      * @return 网络请求返回码
      */
@@ -161,61 +205,77 @@ public class HttpUtil {
             int code = sendmsg(jsonMsg);
             if (code == 200) {
                 return readResponse();
+            } else {
+                return Constants.HTTP_EXCEPTION;
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         } catch (ProtocolException e) {
             e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         } catch (IOException e) {
             e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        return null;
     }
 
-
-    public String upFiles(ArrayList<String> paths) throws IOException {
-        //边界符
-        String boundary = "---------------------------16487838927703";
-        String prefix = "--";
-        String end = "\r\n";
-        //建立连接
-        mUrl = new URL(mServerPath + "/file_upload");
-        mConn = (HttpURLConnection) mUrl.openConnection();
-        setConnectConf();
-        //设置文件传输头信息
-        mConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-        mConn.setRequestProperty("Connection", "Keep-Alive");
-        DataOutputStream fout = new DataOutputStream(mConn.getOutputStream());
-        for (int i = 0; i < paths.size(); i++) {
-            String filePath = paths.get(i);
-            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-            //输出边界符
-            fout.writeBytes(prefix + boundary + end);
-            //输出文件描述
-            fout.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + fileName + "\"" + end + end);
-            //获得文件输入流
-            FileInputStream fileInputStream = new FileInputStream(filePath);
-            //文件读取缓存大小
-            byte[] buffer = new byte[1024 * 4];
-            //文件每次读取长度
-            int len;
-            //循环读取文件并输出
-            while ((len = fileInputStream.read(buffer)) != -1) {
-                fout.write(buffer, 0, len);
+    /**
+     * 上传文件
+     *
+     * @param paths 文件路径
+     * @return
+     * @throws IOException
+     */
+    public String upFiles(ArrayList<String> paths) {
+        try {
+            //边界符
+            String boundary = "---------------------------16487838927703";
+            String prefix = "--";
+            String end = "\r\n";
+            //建立连接
+            mUrl = new URL(mServerPath + "/file_upload");
+            mConn = (HttpURLConnection) mUrl.openConnection();
+            setConnectConf();
+            //设置文件传输头信息
+            mConn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+            mConn.setRequestProperty("Connection", "Keep-Alive");
+            DataOutputStream fout = new DataOutputStream(mConn.getOutputStream());
+            for (int i = 0; i < paths.size(); i++) {
+                String filePath = paths.get(i);
+                String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+                //输出边界符
+                fout.writeBytes(prefix + boundary + end);
+                //输出文件描述
+                fout.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"" + fileName + "\"" + end + end);
+                //获得文件输入流
+                FileInputStream fileInputStream = new FileInputStream(filePath);
+                //文件读取缓存大小
+                byte[] buffer = new byte[1024 * 4];
+                //文件每次读取长度
+                int len;
+                //循环读取文件并输出
+                while ((len = fileInputStream.read(buffer)) != -1) {
+                    fout.write(buffer, 0, len);
+                }
+                fileInputStream.close();
+                //输出分隔边界符
+                fout.writeBytes(end);
             }
-            fileInputStream.close();
-            //输出分隔边界符
-            fout.writeBytes(end);
+            //输出结束边界符
+            fout.writeBytes(prefix + boundary + prefix + end);
+            fout.flush();
+            if (fout != null) fout.close();
+            //读取返回信息
+            if (mConn.getResponseCode() == 200) {
+                return readResponse();
+            } else {
+                return Constants.HTTP_EXCEPTION;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Constants.HTTP_EXCEPTION;
         }
-        //输出结束边界符
-        fout.writeBytes(prefix + boundary + prefix + end);
-        fout.flush();
-        if (fout != null) fout.close();
-        //读取返回信息
-        if (mConn.getResponseCode() == 200) {
-            return readResponse();
-        }
-        return null;
     }
 
     /**
@@ -283,49 +343,6 @@ public class HttpUtil {
         return mConn.getResponseCode();
     }
 
-//    /**
-//     * 下载文件到指定目录
-//     *
-//     * @param url
-//     * @param savePath
-//     * @return
-//     * @throws IOException
-//     */
-//    public static String downLoadFile(String url, String savePath) throws IOException {
-////        //下载线程数
-////        int nThreads = 3;
-//        //文件名
-//        String fileName = url.substring(url.lastIndexOf("/") + 1);
-//
-//        File file = new File(savePath,fileName);
-//
-////        downloadBitmap(url)
-//        return saveImage(downloadBitmap(url),file);
-////        //创建线程池
-////        ExecutorService threadPool = Executors.newFixedThreadPool(nThreads);
-////        URL urn = new URL(url);
-////        HttpURLConnection conn = (HttpURLConnection) urn.openConnection();
-////        conn.setConnectTimeout(5000);
-////        conn.setRequestMethod("POST");
-////        //获取文件长度
-////        int fileLen = conn.getContentLength();
-////        //每个线程下载长度
-////        int block = fileLen / nThreads;
-////        //循环创建线程下载
-////        for (int i = 0; i < nThreads; i++) {
-////            long start = i * block;
-////            long end = (i + 1) * block - 1;
-////            if (i == (nThreads - 1)) end = fileLen;
-////
-////            Dlthread dlThread = new Dlthread(url, savePath, fileName, start, end);
-////            threadPool.execute(dlThread);
-////        }
-////        //关闭线程池
-////        threadPool.shutdown();
-////        return savePath + fileName;
-//
-//    }
-
     /**
      * 建立HTTP请求，并获取Bitmap对象。
      *
@@ -333,13 +350,14 @@ public class HttpUtil {
      * @param savePath 保存路径
      * @return Bitmap的保存路径
      */
-    public static String downloadBitmap(String imageUrl,String savePath) {
+    public String downloadBitmap(String imageUrl, String savePath) {
         String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-        File file = new File(savePath,fileName);
+        File file = new File(savePath, fileName);
         Bitmap bitmap = null;
         HttpURLConnection con = null;
         try {
-            URL url = new URL(imageUrl);
+            URL url = new URL(mServerPath + "/"+imageUrl);
+            Log.d("TAG",url.toString());
             con = (HttpURLConnection) url.openConnection();
             con.setConnectTimeout(5 * 1000);
             con.setReadTimeout(10 * 1000);
@@ -354,17 +372,18 @@ public class HttpUtil {
         if (bitmap == null) {
             return "";
         } else {
-            return saveImage(bitmap,file);
+            return saveImage(bitmap, file);
         }
     }
 
     /**
      * 保存 Bitmap 对象到本地
-     * @param bmp 要保存的 Bitmap 对象
+     *
+     * @param bmp  要保存的 Bitmap 对象
      * @param file 要保存图片的路径
      * @return 保存图片的路径
      */
-    public static String saveImage(Bitmap bmp,File file) {
+    public static String saveImage(Bitmap bmp, File file) {
         try {
             FileOutputStream fos = new FileOutputStream(file);
             bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);
@@ -377,58 +396,4 @@ public class HttpUtil {
         }
         return file.getAbsolutePath();
     }
-
-//    private static class Dlthread implements Runnable {
-//        String url;
-//        String savePath;
-//        String fileName;
-//        long start;
-//        long end;
-//
-//        public Dlthread(String url, String savePath, String fileName, long start, long end) {
-//            this.url = url;
-//            this.savePath = savePath;
-//            this.fileName = fileName;
-//            this.start = start;
-//            this.end = end;
-//        }
-//
-//        @Override
-//        public void run() {
-//            URL turl;
-//            try {
-//                turl = new URL(url);
-//                HttpURLConnection tconn = (HttpURLConnection) turl.openConnection();
-//                tconn.setConnectTimeout(5000);
-//                tconn.setRequestMethod("POST");
-//                //设置文件读取起始位置
-//                tconn.setRequestProperty("Range", "bytes=" + start + "-" + end);
-//                //创建随机读取文件
-//                RandomAccessFile access = new RandomAccessFile(new File(savePath+"/" + fileName), "rwd");
-//                //设置写入开始位置
-//                access.seek(start);
-//                InputStream in = tconn.getInputStream();
-//                int len;
-//                byte[] b = new byte[1024 * 4];
-//                while ((len = in.read(b)) != -1) {
-//                    access.write(b, 0, len);
-//                }
-//                if (access != null) access.close();
-//                if (in != null) in.close();
-//
-//            } catch (MalformedURLException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            } catch (ProtocolException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//
-//
-//        }
-//
-//    }
 }

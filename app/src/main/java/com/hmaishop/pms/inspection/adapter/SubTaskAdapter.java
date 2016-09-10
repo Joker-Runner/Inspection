@@ -19,14 +19,14 @@ import java.util.List;
 
 /**
  * SubTask适配器
- *
+ * <p>
  * Created by Joker_Runner on 7/21 0021.
  */
 public class SubTaskAdapter extends BaseAdapter {
 
+    private int resource;
     private Context context;
     private List<SubTask> subTaskList;
-    private int resource;
     private LayoutInflater inflater;
 
     private TextView subTaskText;
@@ -62,11 +62,10 @@ public class SubTaskAdapter extends BaseAdapter {
 
         subTaskText = (TextView) view.findViewById(R.id.sub_task_text);
         subTaskText.setText(subTask.getSubTaskTitle());
-        Log.d("TAG", "" + subTask.isHaveDone());
         if (subTask.isHaveDone()) {
-            subTaskText.setTextColor(Color.parseColor("#9c9c9c"));
+            subTaskText.setTextColor(context.getResources().getColor(R.color.colorLightGray));
         } else {
-            subTaskText.setTextColor(Color.parseColor("#000000"));
+            subTaskText.setTextColor(context.getResources().getColor(R.color.colorBlank));
         }
 
         subTaskText.setOnClickListener(new View.OnClickListener() {
@@ -74,8 +73,8 @@ public class SubTaskAdapter extends BaseAdapter {
             public void onClick(View view) {
                 Intent intent = new Intent(context, ReportActivity.class);
                 Bundle bundle = new Bundle();
-                Log.d("TAG", "id" + subTask.getId());
-                Log.d("TAG", "subId" + subTask.getSubTaskId());
+                Log.d("TAG", "id  " + subTask.getId());
+                Log.d("TAG", "subId  " + subTask.getSubTaskId());
                 bundle.putSerializable("subTask", subTask);
                 intent.putExtras(bundle);
                 context.startActivity(intent);

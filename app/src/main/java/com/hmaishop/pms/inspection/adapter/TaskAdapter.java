@@ -5,14 +5,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.hmaishop.pms.inspection.R;
@@ -27,17 +25,17 @@ import java.util.List;
 
 /**
  * Task适配器
- *
+ * <p>
  * Created by Joker_Runner on 7/13 0013.
  */
 public class TaskAdapter extends BaseAdapter {
 
+    private int resource;
     private Context context;
     private List<Task> taskList;
-    private int resource;
     private LayoutInflater inflater;
-
     private DatabaseManager databaseManager;
+
     String pathTakePhoto;
     Uri imageUri;
 
@@ -50,7 +48,7 @@ public class TaskAdapter extends BaseAdapter {
         this.taskList = taskList;
     }
 
-    public TaskAdapter(Context context, List<Task> taskList, int resource,DatabaseManager databaseManager) {
+    public TaskAdapter(Context context, List<Task> taskList, int resource, DatabaseManager databaseManager) {
         this.context = context;
         this.taskList = taskList;
         this.resource = resource;
@@ -80,7 +78,7 @@ public class TaskAdapter extends BaseAdapter {
      */
     @Override
     public int getViewTypeCount() {
-        if (getCount()<1) {
+        if (getCount() < 1) {
             return 1;
         } else {
             return getCount();
@@ -95,10 +93,10 @@ public class TaskAdapter extends BaseAdapter {
     @Override
     public View getView(final int i, View view, ViewGroup viewGroup) {
         final ViewHolder viewHolder;
-        if (view == null){
+        if (view == null) {
             viewHolder = new ViewHolder();
-            view = inflater.inflate(resource,null);
-            viewHolder.taskTitle = (TextView) view.findViewById(R.id.task_title);
+            view = inflater.inflate(resource, null);
+            viewHolder.taskTitle = (MyTextView) view.findViewById(R.id.task_title);
             viewHolder.haveProblem = (ToggleButton) view.findViewById(R.id.have_problem);
             viewHolder.imageSet = (ImageButton) view.findViewById(R.id.image_set);
             viewHolder.addImage = (ImageButton) view.findViewById(R.id.add_image);
@@ -117,48 +115,39 @@ public class TaskAdapter extends BaseAdapter {
         databaseManager.updateTask(task);
         switch (databaseManager.queryPhoto(task).size()) {
             case 0:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_none_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_none_black_24dp);
                 break;
             case 1:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_1_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_1_black_24dp);
                 break;
             case 2:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_2_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_2_black_24dp);
                 break;
             case 3:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_3_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_3_black_24dp);
                 break;
             case 4:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_4_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_4_black_24dp);
                 break;
             case 5:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_5_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_5_black_24dp);
                 break;
             case 6:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_6_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_6_black_24dp);
                 break;
             case 7:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_7_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_7_black_24dp);
                 break;
             case 8:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_8_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_8_black_24dp);
                 break;
             case 9:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_9_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_9_black_24dp);
                 break;
             default:
-               viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_9_plus_black_24dp);
+                viewHolder.imageSet.setBackgroundResource(R.drawable.ic_filter_9_plus_black_24dp);
                 break;
         }
-
-//        viewHolder.taskTitle.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//                builder.setMessage(task.getTaskDetails());
-//                builder.show();
-//            }
-//        });
 
         viewHolder.haveProblem.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -166,7 +155,6 @@ public class TaskAdapter extends BaseAdapter {
                 viewHolder.haveProblem.setChecked(b);
                 task.setHaveProblem(!task.isHaveProblem());
                 databaseManager.updateTask(task);
-                Log.d("TAG",task.getTaskTitle() + task.isHaveProblem());
             }
         });
 
@@ -177,7 +165,7 @@ public class TaskAdapter extends BaseAdapter {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(context, PhotoViewActivity.class);
-                intent.putExtra("Task",task);
+                intent.putExtra("Task", task);
                 context.startActivity(intent);
             }
         });
@@ -189,14 +177,14 @@ public class TaskAdapter extends BaseAdapter {
             @Override
             public void onClick(View view) {
                 //保存拍摄照片的temp文件目录
-                File file = new File(Environment.getExternalStorageDirectory()+ "/Inspection/Cache/temp");
-                if (!file.exists()){
+                File file = new File(Environment.getExternalStorageDirectory() + "/Inspection/Cache/temp");
+                if (!file.exists()) {
                     file.mkdirs();
                 }
                 File outputImage = new File(file, "temp.jpg");
                 pathTakePhoto = outputImage.toString();
                 try {
-                    if (outputImage.exists()){
+                    if (outputImage.exists()) {
                         outputImage.delete();
                     }
                     outputImage.createNewFile();
@@ -213,8 +201,8 @@ public class TaskAdapter extends BaseAdapter {
         return view;
     }
 
-    class ViewHolder{
-        TextView taskTitle;
+    class ViewHolder {
+        MyTextView taskTitle;
         ToggleButton haveProblem;
         ImageButton imageSet;
         ImageButton addImage;

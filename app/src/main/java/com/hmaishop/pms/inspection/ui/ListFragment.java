@@ -8,22 +8,19 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hmaishop.pms.inspection.R;
-import com.hmaishop.pms.inspection.util.Constants;
-import com.hmaishop.pms.inspection.database.DatabaseManager;
-import com.hmaishop.pms.inspection.util.HttpUtil;
-import com.hmaishop.pms.inspection.bean.SubTask;
 import com.hmaishop.pms.inspection.adapter.SubTaskAdapter;
+import com.hmaishop.pms.inspection.bean.SubTask;
+import com.hmaishop.pms.inspection.database.DatabaseManager;
+import com.hmaishop.pms.inspection.util.Constants;
+import com.hmaishop.pms.inspection.util.HttpUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -36,19 +33,18 @@ import java.util.List;
  */
 public class ListFragment extends Fragment {
 
-    MainActivity mainActivity;
-    private LinearLayout showMain;
-    private ListView listView;
     private View view;
+    private ListView listView;
 
+    private int todoTaskId;
+    private HttpUtil httpUtil;
     private SubTaskAdapter subTaskAdapter;
     private List<SubTask> subTaskList;
-    private int todoTaskId;
-    private GestureDetector gestureDetector;
-    private HttpUtil httpUtil;
     private DatabaseManager databaseManager;
+
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
+    MainActivity mainActivity;
 
     public void setArgument(MainActivity mainActivity, int todoTaskId) {
         this.mainActivity = mainActivity;
@@ -65,23 +61,14 @@ public class ListFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_list, container, false);
-        showMain = (LinearLayout) view.findViewById(R.id.show_main);
         listView = (ListView) view.findViewById(R.id.task_list);
 
-        showMain.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mainActivity.refreshActivity(Constants.SHOW_MAIN);
-            }
-        });
-        gestureDetector = new GestureDetector(getContext(), new MyGestureListener());
-        container.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                gestureDetector.onTouchEvent(motionEvent);
-                return true;
-            }
-        });
+//        showMain.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                mainActivity.refreshActivity(Constants.SHOW_MAIN);
+//            }
+//        });
 
         sharedPreferences = getActivity().getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
         editor = sharedPreferences.edit();
@@ -97,28 +84,25 @@ public class ListFragment extends Fragment {
     public void initSubTaskList(final int todoTaskId) {
         databaseManager = new DatabaseManager(getContext());
 
-        if (sharedPreferences.getInt("init" +todoTaskId,0) == 1) {
-            Log.d("TAG","List...aCache...");
+        if (sharedPreferences.getInt("init" + todoTaskId, 0) == 1) {
+            Log.d("TAG", "List...aCache...");
             subTaskList = databaseManager.querySubTasks(todoTaskId);
             setSubTaskAdapter(subTaskList);
         } else {
-            Log.d("TAG","List...http...");
+            Log.d("TAG", "List...http...");
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
-                    try {
-                        httpUtil = new HttpUtil(Constants.IP, 3000);
-                        Log.d("TAG", httpUtil.getSubkey(todoTaskId));
-                        Type listType = new TypeToken<ArrayList<SubTask>>() {
-                        }.getType();
-                        ArrayList<SubTask> subTasks = new Gson().fromJson(httpUtil.getSubkey(todoTaskId), listType);
-                        Message message = new Message();
-                        message.obj = subTasks;
-                        handler.sendMessage(message);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
+                    httpUtil = new HttpUtil(Constants.IP, 3000);
+                    Log.d("TAG", httpUtil.getSubkey(todoTaskId));
+                    Type listType = new TypeToken<ArrayList<SubTask>>() {
+                    }.getType();
+                    ArrayList<SubTask> subTasks = new Gson().fromJson(httpUtil.getSubkey(todoTaskId), listType);
+                    Message message = new Message();
+                    message.obj = subTasks;
+                    handler.sendMessage(message);
                 }
             }.start();
         }
@@ -133,11 +117,11 @@ public class ListFragment extends Fragment {
             super.handleMessage(msg);
             if (getActivity() != null) {
                 subTaskList = (List<SubTask>) msg.obj;
-                Log.d("TAG","insert..." + subTaskList.size());
+                Log.d("TAG", "insert..." + subTaskList.size());
                 for (SubTask subTask : subTaskList) {
-                    databaseManager.insertSubTask(subTask, "");
+                    databaseManager.insertSubTask(subTask);
                 }
-                editor.putInt("init" +todoTaskId,1).commit();
+                editor.putInt("init" + todoTaskId, 1).commit();
                 setSubTaskAdapter(subTaskList);
             }
 
@@ -160,16 +144,4 @@ public class ListFragment extends Fragment {
         super.onDestroy();
         databaseManager.closeDatabase();
     }
-
-    class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e2.getY() - e1.getY() > 5) {
-                mainActivity.refreshActivity(Constants.SHOW_MAIN);
-            }
-            return super.onFling(e1, e2, velocityX, velocityY);
-        }
-    }
-
-
 }

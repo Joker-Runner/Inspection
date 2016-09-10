@@ -4,10 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * 巡查人员 Bean
- *
+ * <p>
  * Created by Joker_Runner on 7/18 0018.
  */
-
 
 public class Checker {
     public boolean isOk = true;

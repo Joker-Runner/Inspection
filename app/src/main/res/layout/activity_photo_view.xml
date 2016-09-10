@@ -9,9 +9,8 @@
         android:id="@+id/photo_wall"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:verticalSpacing="10dip"
         android:gravity="center"
-        android:numColumns="3"/>
-
+        android:numColumns="3"
+        android:verticalSpacing="10dip" />
 
 </FrameLayout>

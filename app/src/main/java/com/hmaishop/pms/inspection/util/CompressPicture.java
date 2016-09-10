@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * 压缩照片的工具类
- *
+ * <p>
  * Created by Joker_Runner on 8/5 0005.
  */
 public class CompressPicture {
@@ -38,22 +38,24 @@ public class CompressPicture {
         // 第一次解析将inJustDecodeBounds设置为true，来获取图片大小
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imagePath,options);
+        BitmapFactory.decodeFile(imagePath, options);
         // 调用上面定义的方法计算inSampleSize值
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
         // 使用获取到的inSampleSize值再次解析图片
         options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(imagePath,options);
+        return BitmapFactory.decodeFile(imagePath, options);
     }
 
     /**
      * 压缩Bitmap并保存到本地
      *
-     * @param mBitmap 要保存的图片
+     * @param image 要保存的图片
      * @param file    保存图片的文件夹
      * @return 保存图片的路径
      */
-    public static String saveMyBitmap(Bitmap mBitmap, File file) {
+    public static String saveMyBitmap(String image, File file) {
+        Bitmap mBitmap = decodeSampledBitmapFromResource(image,768,1024);
+
         File f = file;
         Log.d("savePath...", f.getAbsolutePath());
         try {
@@ -83,4 +85,5 @@ public class CompressPicture {
         }
         return f.getAbsolutePath();
     }
+
 }

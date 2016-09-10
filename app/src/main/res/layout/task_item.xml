@@ -4,15 +4,13 @@
     android:layout_height="wrap_content"
     android:gravity="center_vertical">
 
-    <TextView
+    <com.hmaishop.pms.inspection.adapter.MyTextView
         android:id="@+id/task_title"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:padding="@dimen/title_margin"
+        android:layout_weight="1"
         android:gravity="center_vertical"
-        android:layout_centerVertical="true"
-        android:text="1、第一项任务"
+        android:padding="@dimen/title_margin"
         android:textSize="9pt" />
 
     <LinearLayout
@@ -26,11 +24,11 @@
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_centerVertical="true"
-            android:background="@drawable/toggle_button_background"
             android:layout_margin="@dimen/title_margin"
+            android:background="@drawable/toggle_button_background"
+            android:checked="false"
             android:focusable="false"
             android:focusableInTouchMode="false"
-            android:checked="false"
             android:textOff=""
             android:textOn="" />
 
@@ -38,25 +36,25 @@
             android:id="@+id/textView"
             android:layout_width="1dp"
             android:layout_height="30dp"
-            android:padding="@dimen/title_margin"
             android:layout_centerVertical="true"
-            android:background="@color/colorGray" />
+            android:background="@color/colorGray"
+            android:padding="@dimen/title_margin" />
 
         <ImageButton
             android:id="@+id/image_set"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:background="@drawable/ic_filter_none_black_24dp"
-            android:layout_margin="@dimen/title_margin" />
+            android:layout_margin="@dimen/title_margin"
+            android:background="@drawable/ic_filter_none_black_24dp" />
 
         <ImageButton
             android:id="@+id/add_image"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:background="@drawable/ic_add_a_photo_black_24dp"
-            android:layout_marginRight="@dimen/title_margin"/>
+            android:layout_marginRight="@dimen/title_margin"
+            android:background="@drawable/ic_add_a_photo_black_24dp" />
     </LinearLayout>
 
 </LinearLayout>

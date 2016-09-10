@@ -1,10 +1,14 @@
 package com.hmaishop.pms.inspection.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -18,7 +22,6 @@ import com.hmaishop.pms.inspection.util.Constants;
 import com.hmaishop.pms.inspection.util.HttpUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -31,6 +34,7 @@ public class LoginActivity extends BaseActivity implements Serializable {
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
+//    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +42,18 @@ public class LoginActivity extends BaseActivity implements Serializable {
         setTheme(R.style.AppTheme);
         getWindow().setBackgroundDrawableResource(R.color.colorWhite);
         setContentView(R.layout.activity_login);
+//        progressBar = (ProgressBar) findViewById(R.id.login_progress);
 
         deviceId = ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).getDeviceId();
         Log.d("TAG", "" + deviceId);
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
         editor = sharedPreferences.edit();
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         /**
          * 登录链接服务器，获取用户信息
          */
@@ -52,19 +62,23 @@ public class LoginActivity extends BaseActivity implements Serializable {
             public void run() {
                 super.run();
                 try {
+                    Thread.sleep(1000);
                     httpUtil = new HttpUtil(Constants.IP, 3000);
                     String checkerString = httpUtil.login(deviceId);
-                    Thread.sleep(1000);
-                    initLogin(checkerString);
-                    startToDoTaskActivity();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.d("TAG", checkerString);
+                    if (checkerString.equals(Constants.HTTP_EXCEPTION) || checkerString.equals("fail")) {
+                        Log.d("TAG", "登陆失败...");
+                        Message message = new Message();
+                        message.arg1 = 1;
+                        handler.sendMessage(message);
+                    } else {
+                        initLogin(checkerString);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }.start();
-
     }
 
     /**
@@ -75,28 +89,72 @@ public class LoginActivity extends BaseActivity implements Serializable {
     public void initLogin(String checkerString) {
         Checker[] checkers = new Gson().
                 fromJson(checkerString, Checker[].class);
-        if (checkers != null) {
-
-            Checker checker = checkers[0];
+        if (checkers.length >= 1) {
+            final Checker checker = checkers[0];
             editor.putString(Constants.CHECKER_NAME, checker.getCheckerName()).commit();
             editor.putInt(Constants.CHECKER_ID, checker.getCheckerId()).commit();
             File icon = new File(Environment.getExternalStorageDirectory() + "/Inspection/Cache/icon/");
             if (!icon.exists()) {
                 icon.mkdirs();
             }
-            String iconString = new String();
-            Log.d("TAG", checker.getCheckerIcon());
-            //下载头像到指定文件夹
-            iconString = HttpUtil.downloadBitmap(checker.getCheckerIcon(), icon.getAbsolutePath());
+            String iconString;
+            // 下载头像到指定文件夹
+            httpUtil = new HttpUtil(Constants.IP, 3000);
+            iconString = httpUtil.downloadBitmap(checker.getCheckerIcon(), icon.getAbsolutePath());
             Log.d("TAG", "头像地址" + iconString);
             editor.putString(Constants.CHECKER_ICON, iconString).commit();
 
-            Intent intent = new Intent(LoginActivity.this, AMQService.class);
-            intent.putExtra("checkerId", checker.getCheckerId());
-            startService(intent);
+            /**
+             * 开启通知服务
+             */
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(LoginActivity.this, AMQService.class);
+                    intent.putExtra("checkerId", checker.getCheckerId());
+                    startService(intent);
+                }
+            }).start();
             Log.d("TAG", String.valueOf(sharedPreferences.getInt(Constants.CHECKER_ID, -1)));
+            startToDoTaskActivity();
+        } else {
+            Message message = new Message();
+            message.arg1 = 1;
+            handler.sendMessage(message);
         }
     }
+
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.arg1) {
+                case 1:
+                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                    builder.setIcon(R.drawable.ic_warning_black_24dp);
+                    builder.setTitle("登录失败");
+                    builder.setMessage(" 请重新登陆或联系管理人员");
+                    builder.setCancelable(false);
+                    builder.setPositiveButton("重新登陆", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            onResume();
+                        }
+                    });
+
+                    builder.setNegativeButton("退出", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    });
+                    builder.create();
+                    builder.show();
+//                    Snackbar.make(progressBar, "登录失败、请联系管理人员", Snackbar.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
 
     private void startToDoTaskActivity() {
         Intent intent = new Intent(this, ToDoTaskActivity.class);

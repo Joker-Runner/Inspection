@@ -1,7 +1,9 @@
 package com.hmaishop.pms.inspection.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,7 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,12 +24,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
-import com.amap.api.location.AMapLocationClient;
-import com.amap.api.location.AMapLocationClientOption;
-import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.PolylineOptions;
 import com.google.gson.Gson;
@@ -38,14 +39,13 @@ import com.hmaishop.pms.inspection.bean.Photo;
 import com.hmaishop.pms.inspection.bean.SubTask;
 import com.hmaishop.pms.inspection.bean.Task;
 import com.hmaishop.pms.inspection.database.DatabaseManager;
+import com.hmaishop.pms.inspection.service.LocationService;
+import com.hmaishop.pms.inspection.util.BaseActivity;
 import com.hmaishop.pms.inspection.util.CompressPicture;
 import com.hmaishop.pms.inspection.util.Constants;
 import com.hmaishop.pms.inspection.util.HttpUtil;
-import com.hmaishop.pms.inspection.util.InsertLatLng;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -54,24 +54,25 @@ import java.util.List;
 /**
  * 详细问题汇报界面
  */
-public class ReportActivity extends AppCompatActivity
-        implements LocationSource, AMapLocationListener {
+public class ReportActivity extends BaseActivity implements LocationSource {
 
-    private MapView mapView;
     private AMap aMap;
-    private LocationSource.OnLocationChangedListener mListener;
-    private AMapLocationClient mLocationClient;
-    private AMapLocationClientOption mLocationOption;
+    private MapView mapView;
+    private OnLocationChangedListener mListener;
+    private AMapLocation aMapLocation = null;
 
     private ListView taskListView;
     private EditText editText;
     private Button taskCommit;
 
-    private List<Task> taskList;
-    private TaskAdapter taskAdapter;
+    private boolean firstLocation = true;
 
     private SubTask subTask;
-
+    private List<LatLng> latLngList;
+    private LatLng latLng;
+    private List<Task> taskList;
+    private TaskAdapter taskAdapter;
+    private MyReceiver myReceiver;
     private DatabaseManager databaseManager;
     private HttpUtil httpUtil;
 
@@ -89,44 +90,52 @@ public class ReportActivity extends AppCompatActivity
         taskListView = (ListView) findViewById(R.id.task_list);
         editText = (EditText) findViewById(R.id.task_remark);
         taskCommit = (Button) findViewById(R.id.task_commit);
-        init();
 
-        if (subTask.getRemark() != null) {
-            editText.setText(subTask.getRemark());
-        }
+        /**
+         * 坐标空
+         */
         taskCommit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 subTask.setHaveDone(true);
-                databaseManager.updateSubTask(subTask, editText.getText().toString());
+                databaseManager.updateSubTask(subTask, latLng, editText.getText().toString());
                 finish();
             }
         });
+
+
+        init();
+        initListView();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mapView.onResume();
-        initListView();
-    }
 
+        IntentFilter intentFilter = new IntentFilter("Location");
+        registerReceiver(myReceiver, intentFilter);
+    }
 
     /**
      * 初始化设置
      */
     public void init() {
+        myReceiver = new MyReceiver();
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
         editor = sharedPreferences.edit();
         databaseManager = new DatabaseManager(this);
+
         Bundle bundle = getIntent().getExtras();
         subTask = (SubTask) bundle.getSerializable("subTask");
-        if (!subTask.getSubTaskTitle().equals("")) {
+//        if (subTask.getSubTaskTitle()!=null&&!subTask.getSubTaskTitle().equals("")) {
             setTitle(subTask.getSubTaskTitle());
+//        }
+        if (subTask.getRemark() != null) {
+            editText.setText(subTask.getRemark());
         }
         initMap();
     }
-
 
     /**
      * 初始化地图设置，并绘制轨迹
@@ -135,13 +144,36 @@ public class ReportActivity extends AppCompatActivity
         if (aMap == null) {
             aMap = mapView.getMap();
             setUpMap();
-            List<Integer> colorList = new ArrayList<Integer>();
-            for (int i = 0; i < Constants.latLngList.size(); i++) {
+
+            // 初始化绘制轨迹
+            List<Integer> colorList = new ArrayList<>();
+            latLngList = databaseManager.queryLatLng(subTask.getId());
+            for (int i = 0; i < latLngList.size(); i++) {
                 colorList.add(Color.argb(255, 0, 255, 0));
             }
             aMap.addPolyline(new PolylineOptions().colorValues(colorList)
-                    .addAll(Constants.latLngList).useGradient(true).width(20));
+                    .addAll(latLngList).useGradient(true).width(20));
+
+            Message message = new Message();
+            message.arg1 = 2;
+            handler.sendMessage(message);
         }
+    }
+
+    /**
+     * 设置一些aMap的属性
+     */
+    private void setUpMap() {
+        // 设置定位监听
+        aMap.setLocationSource(this);
+        // 设置默认定位按钮是否显示
+        aMap.getUiSettings().setMyLocationButtonEnabled(true);
+        //设置比例尺是否显示
+        aMap.getUiSettings().setScaleControlsEnabled(true);
+        // 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+        aMap.setMyLocationEnabled(true);
+        // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
+        aMap.setMyLocationType(AMap.LOCATION_TYPE_MAP_FOLLOW);
     }
 
     /**
@@ -149,27 +181,33 @@ public class ReportActivity extends AppCompatActivity
      */
     private void initListView() {
         if (sharedPreferences.getInt(subTask.getId() + "_" + subTask.getSubTaskId(), 0) == 1) {
+            // 第一次初始化从网络获取
             Log.d("TAG", "aCache...init");
             taskList = databaseManager.queryTasks(subTask);
             setTaskAdapter(taskList);
         } else {
+            // 后面直接从本地数据库中读取
             Log.d("TAG", "http...init");
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
-                    try {
-                        httpUtil = new HttpUtil(Constants.IP, 3000);
-                        Log.d("TAG Task...", httpUtil.getDetail(subTask.getId(), subTask.getSubTaskId()));
-                        Type listType = new TypeToken<ArrayList<Task>>() {
-                        }.getType();
-                        ArrayList<Task> tasks = new Gson().fromJson(httpUtil.
-                                getDetail(subTask.getId(), subTask.getSubTaskId()), listType);
+
+                    httpUtil = new HttpUtil(Constants.IP, 3000);
+                    Log.d("TAG Task...", httpUtil.getDetail(subTask.getId(), subTask.getSubTaskId()));
+                    Type listType = new TypeToken<ArrayList<Task>>() {
+                    }.getType();
+                    String taskJson = httpUtil.getDetail(subTask.getId(), subTask.getSubTaskId());
+                    if (taskJson == null || taskJson == "fail") {
                         Message message = new Message();
+                        message.arg1 = 3;
+                        handler.sendMessage(message);
+                    } else {
+                        ArrayList<Task> tasks = new Gson().fromJson(taskJson, listType);
+                        Message message = new Message();
+                        message.arg1 = 1;
                         message.obj = tasks;
                         handler.sendMessage(message);
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
             }.start();
@@ -177,23 +215,53 @@ public class ReportActivity extends AppCompatActivity
     }
 
     /**
-     * 处理子线程获取到的数据的Handler，并初始化listView
+     * 1.处理子线程获取到的数据的Handler，并初始化listView
+     * 2.定位成功后回调
+     * 3.获取任务失败
      */
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            taskList = (List<Task>) msg.obj;
-            if (taskList != null) {
+            switch (msg.arg1) {
+                case 1: // 初始化 Task 列表
+                    taskList = (List<Task>) msg.obj;
+                    if (taskList != null) {
+                        Log.d("TAG", "插入..." + taskList.size());
+                        for (Task task : taskList) {
+                            databaseManager.insertTask(task);
+                        }
+                        editor.putInt(subTask.getId() + "_" + subTask.getSubTaskId(), 1).commit();
+                        setTaskAdapter((List<Task>) msg.obj);
+                    } else {
+                        Toast.makeText(ReportActivity.this, "Task 为空", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case 2: // 定位成功后回调
+                    if (firstLocation){
+                        aMap.moveCamera(CameraUpdateFactory.zoomTo(13));
+                        firstLocation = false;
+                    }
 
-                Log.d("TAG", "插入..." + taskList.size());
-                for (Task task : taskList) {
-                    databaseManager.insertTask(task);
-                }
-                editor.putInt(subTask.getId() + "_" + subTask.getSubTaskId(), 1).commit();
-                setTaskAdapter((List<Task>) msg.obj);
-            } else {
-                Toast.makeText(ReportActivity.this, "Task 为空", Toast.LENGTH_SHORT).show();
+                    aMapLocation = LocationService.aMapLocation;
+                    mListener.onLocationChanged(aMapLocation);
+                    latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+
+//                    if (aMapLocation.getLocationType() != 1 && Constants.noGPS){
+//                        Snackbar.make(taskCommit,"搜索不到GPS信号,",Snackbar.LENGTH_LONG)
+//                                .setAction("不再显示", new View.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(View view) {
+//                                        Constants.noGPS = false;
+//                                    }
+//                                }).show();
+//                    }
+                    break;
+                case 3: // 获取任务失败
+                    Toast.makeText(ReportActivity.this, "获取任务失败", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    break;
             }
         }
     };
@@ -211,34 +279,26 @@ public class ReportActivity extends AppCompatActivity
     }
 
     /**
-     * 设置一些aMap的属性
-     */
-    private void setUpMap() {
-        aMap.setLocationSource(this);// 设置定位监听
-        aMap.getUiSettings().setMyLocationButtonEnabled(true);// 设置默认定位按钮是否显示
-        aMap.getUiSettings().setScaleControlsEnabled(true);
-        aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
-        aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);// 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
-    }
-
-
-    /**
      * 拍照成功的回调函数
      *
-     * @param requestCode
-     * @param resultCode
-     * @param data
+     * @param requestCode 请求码
+     * @param resultCode  结果码
+     * @param data        Intent
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        //对于哪个Task进行操作
+        if (latLng != null) {
+            databaseManager.updateSubTask(subTask, latLng, editText.getText().toString());
+        }
+
+        // 对于哪个Task进行操作
         if (resultCode == RESULT_OK) {
             Task task = taskList.get(requestCode);
 
             File tempFile = new File(Environment.getExternalStorageDirectory() + "/Inspection/Cache/temp");
             File tempImage = new File(tempFile, "temp.jpg");
-            Bitmap bitmap = BitmapFactory.decodeFile(String.valueOf(tempImage));
+//            Bitmap bitmap = BitmapFactory.decodeFile(String.valueOf(tempImage));
 
 
             File file = new File(Environment.getExternalStorageDirectory() + "/Inspection/" +
@@ -250,10 +310,11 @@ public class ReportActivity extends AppCompatActivity
                     System.currentTimeMillis() + ".jpg");
 
             Photo photo = new Photo(task.getId(), task.getSubTaskId(), task.getTaskId(),
-                    CompressPicture.saveMyBitmap(bitmap, imageFile));   //工具类中设置压缩比
+                    CompressPicture.saveMyBitmap(tempImage.getAbsolutePath(), imageFile));   // 工具类中设置压缩比
             databaseManager.insertPhoto(photo);
             task.setPictureNum(databaseManager.queryPhoto(task).size() + 1);
             databaseManager.updateTask(task);
+            Log.d("TAG", "Refresh TaskList...");
             taskList.set(requestCode, task);
             taskAdapter.setTaskList(taskList);
             taskAdapter.notifyDataSetChanged();
@@ -262,13 +323,22 @@ public class ReportActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void activate(OnLocationChangedListener onLocationChangedListener) {
 
+        mListener = onLocationChangedListener;
+    }
+
+    @Override
+    public void deactivate() {
+        mListener = null;
+    }
 
     @Override
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        deactivate();
+        unregisterReceiver(myReceiver);
     }
 
     @Override
@@ -281,11 +351,9 @@ public class ReportActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+
+        firstLocation = true;
         databaseManager.closeDatabase();
-        editor.remove(Constants.A_LATLNG).commit();
-        if (null != mLocationClient) {
-            mLocationClient.onDestroy();
-        }
     }
 
     @Override
@@ -298,74 +366,9 @@ public class ReportActivity extends AppCompatActivity
     }
 
     /**
-     * 定位成功后回调的函数
-     *
-     * @param aMapLocation
-     */
-    @Override
-    public void onLocationChanged(AMapLocation aMapLocation) {
-        if (mListener != null && aMapLocation != null) {
-            if (aMapLocation != null && aMapLocation.getErrorCode() == 0
-                    && aMapLocation.getLocationType() != 6) {//舍弃基站定位结果
-                mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-                LatLng latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
-                if (InsertLatLng.insert(latLng)) {
-                    Constants.latLngList.add(latLng);
-                    databaseManager.insertLatLng(subTask.getId(), latLng);
-                    editor.putString(Constants.A_LATLNG,new Gson().toJson(latLng)).commit();
-                }
-            } else {
-                String errText = "定位失败," + aMapLocation.getErrorCode() + ": " + aMapLocation.getErrorInfo();
-                Log.e("AMapErr", errText);
-            }
-        }
-    }
-
-    /**
-     * 激活定位
-     *
-     * @param onLocationChangedListener
-     */
-    @Override
-    public void activate(LocationSource.OnLocationChangedListener onLocationChangedListener) {
-        mListener = onLocationChangedListener;
-        if (mLocationClient == null) {
-            mLocationClient = new AMapLocationClient(this);
-            mLocationOption = new AMapLocationClientOption();
-            //设置定位监听
-            mLocationClient.setLocationListener(this);
-            //设置为高精度定位模式
-            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-            //设置定位间隔
-            mLocationOption.setInterval(Constants.locationInterval);
-            //设置定位参数
-            mLocationClient.setLocationOption(mLocationOption);
-            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
-            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
-            // 在定位结束后，在合适的生命周期调用onDestroy()方法
-            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
-            mLocationClient.startLocation();
-        }
-    }
-
-    /**
-     * 关闭定位
-     */
-    @Override
-    public void deactivate() {
-        mListener = null;
-        if (mLocationClient != null) {
-            mLocationClient.stopLocation();
-            mLocationClient.onDestroy();
-        }
-        mLocationClient = null;
-    }
-
-
-    /**
      * 保持 ListView 在 ScrollView 中正常显示
      *
-     * @param listView
+     * @param listView ListView
      */
     public void setListViewHeightBasedOnChildren(ListView listView) {
         // 获取ListView对应的Adapter
@@ -385,9 +388,21 @@ public class ReportActivity extends AppCompatActivity
         }
 
         ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height =totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
         // listView.getDividerHeight()获取子项间分隔符占用的高度
         // params.height最后得到整个ListView完整显示需要的高度
         listView.setLayoutParams(params);
+    }
+
+    /**
+     * 定位服务的 BroadcastReceiver
+     */
+    class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Message message = new Message();
+            message.arg1 = 2;
+            handler.sendMessage(message);
+        }
     }
 }

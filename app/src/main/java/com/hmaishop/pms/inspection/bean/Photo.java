@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * 照片 Bean
- *
+ * <p>
  * Created by Joker_Runner on 7/27 0027.
  */
 public class Photo {

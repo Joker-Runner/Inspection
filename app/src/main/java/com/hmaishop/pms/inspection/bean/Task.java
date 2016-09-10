@@ -6,14 +6,9 @@ import java.io.Serializable;
 
 /**
  * 详情任务 Bean
- *
+ * <p>
  * Created by Joker_Runner on 7/13 0013.
  */
-
-//[{"stand":1,"mission_id":2,"department_ID":1,"check_standard":"有无裂缝"},
-// {"stand":2,"mission_id":2,"department_ID":1,"check_standard":"有无裂缝，异常变形"}]
-//    {"mission_id":40,"department_ID":1,"stand_ID":1,"reservoir_Name":"asda",
-// "picture_num":0,"have_problem":0,"department_name":"坝顶","stand_content":"有无裂缝，异常变形"}
 public class Task implements Serializable {
     @SerializedName("mission_id")
     private int id;
@@ -23,22 +18,11 @@ public class Task implements Serializable {
     private int taskId;
     @SerializedName("stand_content")
     private String taskTitle;
-//    @SerializedName("task_detail")
-//    private String taskDetails= "Detail";
     @SerializedName("have_problem")
     private int haveProblem = 0;
     @SerializedName("picture_num")
     private int pictureNum = 0;
 
-
-
-//    public String getTaskDetails() {
-//        return taskDetails;
-//    }
-//
-//    public void setTaskDetails(String taskDetails) {
-//        this.taskDetails = taskDetails;
-//    }
 
     public void setId(int id) {
         this.id = id;
@@ -81,7 +65,7 @@ public class Task implements Serializable {
     }
 
     public boolean isHaveProblem() {
-        return haveProblem==1;
+        return haveProblem == 1;
     }
 
     public void setHaveProblem(boolean haveProblem) {
@@ -91,11 +75,4 @@ public class Task implements Serializable {
             this.haveProblem = 0;
         }
     }
-
-//    public Task(int taskId, String taskTitle, String taskDetails) {
-//
-//        this.taskId = taskId;
-//        this.taskTitle = taskTitle;
-//        this.taskDetails = taskDetails;
-//    }
 }

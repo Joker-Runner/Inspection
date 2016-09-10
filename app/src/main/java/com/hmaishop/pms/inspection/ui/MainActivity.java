@@ -1,33 +1,34 @@
 package com.hmaishop.pms.inspection.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
-import com.amap.api.location.AMapLocationClient;
-import com.amap.api.location.AMapLocationClientOption;
-import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
-import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.PolylineOptions;
-import com.google.gson.Gson;
 import com.hmaishop.pms.inspection.R;
+import com.hmaishop.pms.inspection.database.DatabaseManager;
+import com.hmaishop.pms.inspection.service.LocationService;
 import com.hmaishop.pms.inspection.util.BaseActivity;
 import com.hmaishop.pms.inspection.util.Constants;
-import com.hmaishop.pms.inspection.database.DatabaseManager;
-import com.hmaishop.pms.inspection.util.InsertLatLng;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,25 +36,21 @@ import java.util.List;
 /**
  * MainActivity
  */
-public class MainActivity extends BaseActivity implements LocationSource, AMapLocationListener {
+public class MainActivity extends BaseActivity implements LocationSource {
 
 
     private LinearLayout mapContainer;
-    private ImageButton location;
     private MapView mapView;
     private AMap aMap;
     private OnLocationChangedListener mListener;
-    private AMapLocationClient mLocationClient;
-    private AMapLocationClientOption mLocationOption;
-    private LatLng latLng;
+    public static AMapLocation aMapLocation = null;
 
+    private boolean firstLocation = true;
+    private int showWhat;
     private int toDoTaskId;
 
-    private int showWhat;
-
+    private MyReceiver myReceiver;
     private DatabaseManager databaseManager;
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,41 +60,38 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
         mapView = (MapView) findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);
         mapContainer = (LinearLayout) findViewById(R.id.map_container);
-        location = (ImageButton) findViewById(R.id.location);
-        location.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (latLng != null) {
-                    if (aMap.getCameraPosition().zoom <= 12) {
-                        aMap.moveCamera(CameraUpdateFactory.newCameraPosition
-                                (new CameraPosition(latLng, 12, 0, 0)));
-                    } else {
-                        aMap.moveCamera(CameraUpdateFactory.newCameraPosition
-                                (new CameraPosition(latLng, aMap.getCameraPosition().zoom, 0, 0)));
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this,"定位失败",Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 
         toDoTaskId = getIntent().getIntExtra(Constants.TODO_TASK_ID, -1);
+        Log.d("TAG",toDoTaskId+"...");
 
-        init();
+        Log.d("TAG","onCreate...");
+
+        init(); //初始化
+        initLocation(); //开启定位服务
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
         refreshActivity(Constants.SHOW_MAIN);
+        Log.d("TAG","onResume...");
+
+        // 注册广播接收者
+        IntentFilter intentFilter = new IntentFilter("Location");
+        registerReceiver(myReceiver, intentFilter);
     }
 
     /**
      * 初始化
      */
     private void init() {
+        myReceiver = new MyReceiver();
         databaseManager = new DatabaseManager(this);
-        sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
-        editor = sharedPreferences.edit();
         if (aMap == null) {
             aMap = mapView.getMap();
             setUpMap();
-            Constants.latLngList = new ArrayList<>();
         }
     }
 
@@ -105,11 +99,29 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
      * 设置一些aMap的属性
      */
     private void setUpMap() {
-        aMap.setLocationSource(this);// 设置定位监听
-        aMap.getUiSettings().setMyLocationButtonEnabled(false);// 设置默认定位按钮是否显示
-        aMap.getUiSettings().setScaleControlsEnabled(true);//设置比例尺是否显示
-        aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
-        aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);// 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
+        // 设置定位监听
+        aMap.setLocationSource(this);
+        // 设置默认定位按钮是否显示
+        aMap.getUiSettings().setMyLocationButtonEnabled(true);
+        //设置比例尺是否显示
+        aMap.getUiSettings().setScaleControlsEnabled(true);
+        // 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+        aMap.setMyLocationEnabled(true);
+        // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
+        aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
+//        // 设置地图的缩放比例
+//        aMap.moveCamera(CameraUpdateFactory.zoomTo(13));
+    }
+
+    /**
+     * 初始化启动定位服务
+     */
+    private void initLocation() {
+        LocationService.toDoTaskId = toDoTaskId;
+        Intent intent = new Intent(MainActivity.this, LocationService.class);
+        startService(intent);
+
+        Log.d("TAG", "startLocationService...");
     }
 
     /**
@@ -119,18 +131,18 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
      */
     public void refreshActivity(int actionTag) {
         switch (actionTag) {
-            case Constants.SHOW_MAIN:
+            case Constants.SHOW_MAIN:   //刷新MainActivity，显示巡查中...
                 setTitle("巡查中...");
                 showWhat = Constants.SHOW_MAIN;
                 LinearLayout.LayoutParams layoutParamsMain = (LinearLayout.LayoutParams) mapContainer.getLayoutParams();
                 layoutParamsMain.weight = 2;
                 mapContainer.setLayoutParams(layoutParamsMain);
                 MainFragment mainFragment = new MainFragment();
-                mainFragment.setMainActivity(this);
+                mainFragment.setArguments(this,toDoTaskId,databaseManager);
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.container, mainFragment).commit();
                 break;
-            case Constants.SHOW_LIST:
+            case Constants.SHOW_LIST:   //刷新MainActivity，显示部位列表
                 setTitle("选择部位");
                 showWhat = Constants.SHOW_LIST;
                 LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) mapContainer.getLayoutParams();
@@ -146,19 +158,63 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
         }
     }
 
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.arg1) {
+                case 1: //处理定位信息
+                    aMapLocation = LocationService.aMapLocation;
+                    mListener.onLocationChanged(aMapLocation);
+
+//                    if (aMapLocation.getLocationType() != 1 && Constants.noGPS) {
+//                        Snackbar.make(mapContainer, "搜索不到GPS信号,", Snackbar.LENGTH_LONG)
+//                                .setAction("不再显示", new View.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(View view) {
+//                                        Constants.noGPS = false;
+//                                    }
+//                                }).show();
+//                    }
+                    if (firstLocation){
+                        aMap.moveCamera(CameraUpdateFactory.zoomTo(13));
+                        firstLocation = false;
+                    }
+
+                    List<LatLng> latLngList = databaseManager.queryLatLng(toDoTaskId);
+                    List<Integer> colorList = new ArrayList<>();
+                    for (int i = 0; i < latLngList.size(); i++) {
+                        colorList.add(Color.argb(255, 0, 255, 0));
+                    }
+                    if (!latLngList.isEmpty()) {
+                        aMap.addPolyline(new PolylineOptions().colorValues(colorList)
+                                .addAll(latLngList).useGradient(true).width(20));
+                    } else {
+                        Log.d("TAG", "绘图数据为空");
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mapView.onResume();
-        refreshActivity(Constants.SHOW_MAIN);
+    public void activate(OnLocationChangedListener onLocationChangedListener) {
+        mListener = onLocationChangedListener;
+    }
+
+    @Override
+    public void deactivate() {
+        mListener = null;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mapView.onPause();
-        deactivate();
+        unregisterReceiver(myReceiver);
+        Log.d("TAG","onPause...");
     }
 
     @Override
@@ -171,11 +227,9 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        firstLocation = true;
         databaseManager.closeDatabase();
-        editor.remove(Constants.A_LATLNG).commit();
-        if (null != mLocationClient) {
-            mLocationClient.onDestroy();
-        }
+        Log.d("TAG","onDestroy...");
     }
 
     @Override
@@ -205,81 +259,14 @@ public class MainActivity extends BaseActivity implements LocationSource, AMapLo
     }
 
     /**
-     * 定位成功后回调的函数
-     *
-     * @param aMapLocation
+     * 定位服务的 BroadcastReceiver
      */
-    @Override
-    public void onLocationChanged(AMapLocation aMapLocation) {
-        try {
-            if (mListener != null && aMapLocation != null) {
-                if (aMapLocation != null && aMapLocation.getErrorCode() == 0
-                        && aMapLocation.getLocationType() != 6) {//舍弃基站定位结果
-                    mListener.onLocationChanged(aMapLocation);// 显示系统小蓝点
-                    latLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
-                    if (InsertLatLng.insert(latLng)) {
-                        Constants.latLngList.add(latLng);
-                        databaseManager.insertLatLng(toDoTaskId, latLng);
-                        editor.putString(Constants.A_LATLNG,new Gson().toJson(latLng)).commit();
-                        Log.d("TAG","put"+latLng);
-                        List<Integer> colorList = new ArrayList<Integer>();
-                        for (int i = 0; i < Constants.latLngList.size(); i++) {
-                            colorList.add(Color.argb(255, 0, 255, 0));
-                        }
-                        if (!Constants.latLngList.isEmpty()) {
-                            aMap.addPolyline(new PolylineOptions().colorValues(colorList)
-                                    .addAll(Constants.latLngList).useGradient(true).width(20));
-                        } else {
-                            Log.d("TAG", "绘图数据为空");
-                        }
-                    }
-                } else {
-                    String errText = "定位失败," + aMapLocation.getErrorCode() + ": " + aMapLocation.getErrorInfo();
-                    Log.e("AMapErr", errText);
-                }
-
-            }
-        } catch (Exception e) {
-            Log.e("TAG", "定位回调绘图有异常...");
+    class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Message message = new Message();
+            message.arg1 = 1;
+            handler.sendMessage(message);
         }
     }
-
-
-    /**
-     * 激活定位
-     *
-     * @param onLocationChangedListener
-     */
-    @Override
-    public void activate(OnLocationChangedListener onLocationChangedListener) {
-        mListener = onLocationChangedListener;
-        if (mLocationClient == null) {
-            mLocationClient = new AMapLocationClient(this);
-            mLocationOption = new AMapLocationClientOption();
-            //设置定位监听
-            mLocationClient.setLocationListener(this);
-            //设置为高精度定位模式
-            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-            //设置定位间隔
-            mLocationOption.setInterval(Constants.locationInterval);
-            //设置定位参数
-            mLocationClient.setLocationOption(mLocationOption);
-            // 此方法为每隔固定时间会发起一次定位请求，为了减少电量消耗或网络流量消耗，
-            // 注意设置合适的定位时间的间隔（最小间隔支持为2000ms），并且在合适时间调用stopLocation()方法来取消定位请求
-            // 在定位结束后，在合适的生命周期调用onDestroy()方法
-            // 在单次定位情况下，定位无论成功与否，都无需调用stopLocation()方法移除请求，定位sdk内部会移除
-            mLocationClient.startLocation();
-        }
-    }
-
-    @Override
-    public void deactivate() {
-        mListener = null;
-        if (mLocationClient != null) {
-            mLocationClient.stopLocation();
-            mLocationClient.onDestroy();
-        }
-        mLocationClient = null;
-    }
-
 }

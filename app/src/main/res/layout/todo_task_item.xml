@@ -22,25 +22,12 @@
         android:text="任务详情"
         android:textSize="8pt" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <Button
-            android:id="@+id/todo_task_submit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="提交任务"
-            android:background="@drawable/begin_background"/>
-
-        <Button
-            android:id="@+id/todo_task_begin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:text="开始巡查"
-            android:background="@drawable/begin_background" />
-    </RelativeLayout>
-
-
+    <Button
+        android:id="@+id/todo_task_begin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:background="@drawable/begin_background"
+        android:text="@string/start_task" />
 
 </LinearLayout>

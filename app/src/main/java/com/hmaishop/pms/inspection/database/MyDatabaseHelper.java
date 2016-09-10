@@ -7,10 +7,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.hmaishop.pms.inspection.util.Constants;
 
 /**
- *
  * Created by Joker_Runner on 7/22 0022.
  */
-public class MyDatabaseHelper extends SQLiteOpenHelper{
+public class MyDatabaseHelper extends SQLiteOpenHelper {
     private Context mContext;
 
     public MyDatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {

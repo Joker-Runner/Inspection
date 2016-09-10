@@ -6,14 +6,10 @@ import java.io.Serializable;
 
 /**
  * 子部位 Bean
- *
+ * <p>
  * Created by Joker_Runner on 7/18 0018.
  */
-
-//  [{"id":1,"mission_id":2,"department_name":"坝顶"},
-//  {"id":2,"mission_id":2,"department_name":"坝堤"}]
-//[{"id":14,"department_ID":1,"mission_id":40,"department_name":"坝顶"}
-public class SubTask implements Serializable{
+public class SubTask implements Serializable {
     @SerializedName("mission_id")
     private int id;
     @SerializedName("department_ID")
@@ -23,6 +19,9 @@ public class SubTask implements Serializable{
 
     private boolean haveDone = false;
 
+    private double latitude = 0;
+    private double longitude = 0;
+
     private String remark = "";
 
     public boolean isHaveDone() {
@@ -31,6 +30,22 @@ public class SubTask implements Serializable{
 
     public void setHaveDone(boolean haveDone) {
         this.haveDone = haveDone;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public String getRemark() {

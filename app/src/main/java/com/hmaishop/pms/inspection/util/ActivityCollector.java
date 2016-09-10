@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * ActivityCollector
- *
+ * <p>
  * Created by Joker_Runner on 7/12 0012.
  */
 public class ActivityCollector {

@@ -1,34 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context="com.hmaishop.pms.inspection.ui.MainActivity">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
     <LinearLayout
         android:id="@+id/map_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2">
 
-        <FrameLayout
+        <com.amap.api.maps.MapView
+            android:id="@+id/map"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <com.amap.api.maps.MapView
-                android:id="@+id/map"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-            <ImageButton
-                android:id="@+id/location"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="top|right"
-                android:layout_margin="@dimen/title_margin"
-                android:src="@drawable/ic_my_location_black_24dp"
-                android:alpha="128"
-                android:background="@drawable/ic_location_background"/>
-        </FrameLayout>
+            android:layout_height="match_parent" />
+
     </LinearLayout>
 
     <FrameLayout
@@ -37,6 +28,6 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal" />
+    </LinearLayout>
 
-
-</LinearLayout>
+</android.support.design.widget.CoordinatorLayout>

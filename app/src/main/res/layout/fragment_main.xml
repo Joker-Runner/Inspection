@@ -10,7 +10,7 @@
         android:layout_marginBottom="24dp"
         android:orientation="horizontal">
 
-        <ImageView
+        <com.hmaishop.pms.inspection.ui.CircleImageView
             android:id="@+id/icon"
             android:layout_width="60dp"
             android:layout_height="60dp"
@@ -19,36 +19,21 @@
             android:src="@mipmap/ic_launcher" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_margin="@dimen/inspection_margin"
             android:gravity="center_vertical"
-            android:text="巡查中..."
+            android:text="@string/inspection"
             android:textSize="12pt" />
 
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/show_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true"
-        android:gravity="center"
-        android:clickable="true"
-        android:descendantFocusability="blocksDescendants"
-        android:focusable="true">
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/colorLightGray"
-            android:clickable="false"/>
-
         <ImageButton
-            android:layout_width="40dp"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:background="@drawable/ic_arrow_drop_up_black_24dp" />
+            android:id="@+id/up_load_task"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="@dimen/inspection_margin"
+            android:background="@drawable/ic_backup_black_24dp"
+            android:layout_gravity="center_vertical"/>
+
+
     </LinearLayout>
+
 </RelativeLayout>

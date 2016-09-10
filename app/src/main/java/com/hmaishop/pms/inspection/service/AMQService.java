@@ -1,6 +1,5 @@
 package com.hmaishop.pms.inspection.service;
 
-import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,10 +17,13 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.amap.api.maps.model.LatLng;
+import com.google.gson.Gson;
 import com.hmaishop.pms.inspection.R;
+import com.hmaishop.pms.inspection.database.DatabaseManager;
+import com.hmaishop.pms.inspection.ui.ToDoTaskActivity;
 import com.hmaishop.pms.inspection.util.Constants;
 import com.hmaishop.pms.inspection.util.HttpUtil;
-import com.hmaishop.pms.inspection.ui.ToDoTaskActivity;
 
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
@@ -36,7 +38,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
-import java.util.List;
 
 /**
  * 通知推送服务
@@ -46,7 +47,7 @@ import java.util.List;
 public class AMQService extends Service {
     private static String TAG = "AMQService";
     //主机ip
-    private static String HOST = "1546e5j729.imwork.net";
+    private static String HOST = Constants.IP;
     //端口号
     private static int PORT = 1883;
     //连接用户名
@@ -79,6 +80,9 @@ public class AMQService extends Service {
     SharedPreferences sharedPreferences;
     HttpUtil httpUtil;
 
+    DatabaseManager databaseManager;
+
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -89,6 +93,7 @@ public class AMQService extends Service {
     public void onCreate() {
         super.onCreate();
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
+        databaseManager = new DatabaseManager(this);
         ClientID = getClientID();
         mqtt = new MQTT();
         try {
@@ -131,27 +136,46 @@ public class AMQService extends Service {
                     try {
                         JSONObject jsonObject = new JSONObject(msg);
                         switch (jsonObject.getString("tag")) {
-                            case "1":                 //受到新任务
+                            case "1":   // 受到新任务
+                                // 发通知
                                 notification(jsonObject.getString("content"));
+                                // 发广播
+                                Intent intent = new Intent();
+                                intent.putExtra("msg", "收到新任务");
+                                intent.setAction("Broadcast_NewTask");
+                                sendBroadcast(intent);
                                 break;
-                            case "2":                 //获取位置坐标
+                            case "2":   // 获取位置坐标
 
-                                upLoadAMQ(jsonObject.getString("user"),"{\"user\":"+
-                                        sharedPreferences.getInt(Constants.CHECKER_ID,-1)+","+
-                                        sharedPreferences.getString(Constants.A_LATLNG,"null").substring(1));
+                                /**
+                                 * latLng : 定位成功
+                                 * null : 定位服务没有开启（不在巡查任务/服务出错）
+                                 */
 
-                                Log.d("TAG","up "+sharedPreferences.getString(Constants.A_LATLNG,"null"));
+                                LatLng latLng = databaseManager.queryTopLatLng();
+                                String upLatLng;
+                                if (latLng == null) {
+                                    upLatLng = "{\"user\":" + sharedPreferences.getInt
+                                            (Constants.CHECKER_ID, -1) + ",\"tag\":\"null\"}";
+                                } else {
+                                    upLatLng = new Gson().toJson(latLng);
+                                    upLatLng = "{\"user\":" + sharedPreferences.getInt
+                                            (Constants.CHECKER_ID, -1) + ",\"tag\":\"lat_lng\"," + upLatLng.substring(1);
+                                }
+
+                                upLoadAMQ(jsonObject.getString("user"), upLatLng);
+                                Log.d("TAG", "up " + upLatLng);
                                 break;
                             default:
-                                Log.d("TAG","TAG不匹配");
+                                Log.d("TAG", "TAG不匹配");
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
-                        upLoadAMQ("Inspection",e.toString());
+                        upLoadAMQ("Inspection", e.toString());
                     }
 
                     Log.i(TAG, msg);
-                        //to do something
+                    //to do something
 
 //                        Intent intent = new Intent(ACTION_RECEIVE);
 //                        Bundle bundle = new Bundle();
@@ -178,7 +202,7 @@ public class AMQService extends Service {
         filter = new IntentFilter();
         filter.addAction(Intent.ACTION_TIME_TICK);
         mNManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        httpUtil = new HttpUtil(Constants.IP,3000);
+        httpUtil = new HttpUtil(Constants.IP, 3000);
     }
 
     @Override
@@ -263,34 +287,10 @@ public class AMQService extends Service {
         return Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
-    //    private class Rec extends BroadcastReceiver{
-//
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            if(intent.getAction().equals(Intent.ACTION_TIME_TICK)){
-//                Log.i("msg:","guard");
-//                if (!isServiceRunning(GuardproService.class,context)){
-//                    Intent i = new Intent(context,GuardproService.class);
-//                    context.startService(i);
-//                    Log.i("msg:", "start mq");
-//                }
-//            }
-//        }
-//    }
-    private static boolean isServiceRunning(Class<?> serviceClass, Context context) {
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> serviceList = activityManager.getRunningServices(Integer.MAX_VALUE);
-        if (serviceList == null || serviceList.size() == 0)
-            return false;
-        for (ActivityManager.RunningServiceInfo info : serviceList) {
-            if (info.service.getClassName().equals(serviceClass.getName()))
-                return true;
-        }
-        return false;
-    }
 
     /**
      * 接受推送通知时的回掉函数
+     *
      * @param newTask 一个标签（新的临时任务/获取当前的位置信息/...）
      */
     private void notification(String newTask) {
@@ -307,8 +307,7 @@ public class AMQService extends Service {
                     .setWhen(System.currentTimeMillis())
                     .setDefaults(Notification.DEFAULT_ALL)
                     .setAutoCancel(true)
-                    .setContentIntent(pendingIntent)
-            ;
+                    .setContentIntent(pendingIntent);
 
             notification = builder.build();
             Log.i(TAG, "" + Build.VERSION_CODES.JELLY_BEAN);
@@ -323,8 +322,8 @@ public class AMQService extends Service {
         mNManager.notify(1, notification);
     }
 
-    public void upLoadAMQ(String user,String context) {
-        Log.d("TAG",context);
+    public void upLoadAMQ(String user, String context) {
+//        Log.d("TAG", context);
         connection.publish(user, context.getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
             @Override
             public void onSuccess(Void aVoid) {

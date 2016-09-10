@@ -194,5 +194,4 @@ public class PhotoViewAdapter extends ArrayAdapter<String> implements OnScrollLi
             imageView.setImageBitmap(bitmap);
         }
     }
-
 }

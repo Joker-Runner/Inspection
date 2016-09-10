@@ -9,20 +9,20 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/login_text"
         android:layout_centerHorizontal="true"
-        android:visibility="visible"
-        android:layout_above="@+id/login_text" />
+        android:visibility="visible" />
 
     <TextView
         android:id="@+id/login_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/activity_vertical_margin"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:textSize="26sp"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:text="@string/login"
         android:textColor="@color/colorPrimary"
-        android:text="登录中 ..."/>
+        android:textSize="26sp" />
 
 
 </RelativeLayout>
