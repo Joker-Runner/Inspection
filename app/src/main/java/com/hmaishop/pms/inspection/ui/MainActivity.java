@@ -126,8 +126,6 @@ public class MainActivity extends BaseActivity implements LocationSource {
         aMap.setMyLocationEnabled(true);
         // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
         aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
-//        // 设置地图的缩放比例
-//        aMap.moveCamera(CameraUpdateFactory.zoomTo(13));
     }
 
     /**

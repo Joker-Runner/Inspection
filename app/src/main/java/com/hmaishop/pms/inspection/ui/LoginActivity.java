@@ -150,7 +150,6 @@ public class LoginActivity extends BaseActivity implements Serializable {
                     });
                     builder.create();
                     builder.show();
-//                    Snackbar.make(progressBar, "登录失败、请联系管理人员", Snackbar.LENGTH_LONG).show();
                     break;
             }
         }

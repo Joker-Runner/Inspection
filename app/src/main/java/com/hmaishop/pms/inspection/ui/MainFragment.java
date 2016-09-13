@@ -27,7 +27,7 @@ public class MainFragment extends Fragment {
 
     private View view;
     private ImageView icon;
-    private Button upLoadTask;  // 巡查部位
+    private Button upLoadTask;  // 检查部位
     private MainActivity mainActivity;
 
 
