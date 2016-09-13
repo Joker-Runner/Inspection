@@ -83,8 +83,7 @@ public class LocationService extends Service implements AMapLocationListener {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(Constants.TODO_TASK_ID,toDoTaskId);
         PendingIntent pendingIntent = PendingIntent.getActivity
-                (this,
-                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                (this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
         builder.setSmallIcon(R.drawable.logo);
         builder.setContentTitle("巡查中...");
@@ -243,7 +242,6 @@ public class LocationService extends Service implements AMapLocationListener {
                 aLatLng = latLng;
             }
         }
-
     }
 
 

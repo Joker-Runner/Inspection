@@ -6,6 +6,7 @@
     <string name="inspection">巡查中...</string>
     <string name="submit_task">提交任务</string>
     <string name="start_task">开始巡查</string>
+    <string name="stop_task">上报巡查</string>
 
     <string name="notifyTitle">提示</string>
     <string name="notifyMsg">当前应用缺少必要权限。\n\n请点击\"设置\"-\"权限\"-打开所需权限。</string>

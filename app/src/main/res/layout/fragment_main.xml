@@ -1,13 +1,14 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.hmaishop.pms.inspection.ui.MainFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="24dp"
+        android:layout_weight="1"
         android:orientation="horizontal">
 
         <com.hmaishop.pms.inspection.ui.CircleImageView
@@ -19,21 +20,22 @@
             android:src="@mipmap/ic_launcher" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
             android:text="@string/inspection"
             android:textSize="12pt" />
-
-        <ImageButton
-            android:id="@+id/up_load_task"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_margin="@dimen/inspection_margin"
-            android:background="@drawable/ic_backup_black_24dp"
-            android:layout_gravity="center_vertical"/>
-
-
     </LinearLayout>
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/up_load_task"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上报"
+        android:background="@drawable/begin_background"
+        android:layout_marginBottom="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_alignParentBottom="true" />
+
+</LinearLayout>
