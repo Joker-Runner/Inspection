@@ -41,8 +41,6 @@ import java.net.URISyntaxException;
 
 /**
  * 通知推送服务
- * <p>
- * Created by yg on 2016/7/22.
  */
 public class AMQService extends Service {
     private static String TAG = "AMQService";
@@ -210,12 +208,19 @@ public class AMQService extends Service {
 //        if(intent.getAction().equals(ACTION_KEEP_ALIVE)){
 //            KeepAlive();
 //        }
-        checkerId = intent.getIntExtra("checkerId", -1);
+
+        if (intent == null){
+            checkerId = sharedPreferences.getInt(Constants.CHECKER_ID,-1);
+        } else {
+            checkerId = intent.getIntExtra("checkerId", -1);
+        }
+
         start();
 
         registerReceiver(receiver, filter);
         flags = 1;
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
+//        return super.onStartCommand(intent, flags, startId);
     }
 
     private void start() {
