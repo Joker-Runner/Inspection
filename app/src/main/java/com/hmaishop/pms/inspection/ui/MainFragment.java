@@ -24,12 +24,10 @@ import com.hmaishop.pms.inspection.util.Constants;
  */
 public class MainFragment extends Fragment {
 
-
     private View view;
     private ImageView icon;
     private Button upLoadTask;  // 检查部位
     private MainActivity mainActivity;
-
 
     private SharedPreferences sharedPreferences;
 
@@ -87,6 +85,4 @@ public class MainFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.upload_task, menu);
     }
-
-
 }
