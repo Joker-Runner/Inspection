@@ -72,6 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/commit_button_margin"
             android:background="@drawable/commit_background"
+            android:textColor="@color/colorWhite"
             android:text="@string/submit" />
 
     </LinearLayout>

@@ -65,9 +65,10 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
         myReceiver = new MyReceiver();
 
         swipeRefreshLayout.setOnRefreshListener(this);
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(android.R.color.holo_blue_bright),
-                getResources().getColor(android.R.color.holo_green_light),
+        swipeRefreshLayout.setColorSchemeColors(
                 getResources().getColor(android.R.color.holo_orange_light),
+                getResources().getColor(android.R.color.holo_blue_bright),
+                getResources().getColor(android.R.color.holo_green_light),
                 getResources().getColor(android.R.color.holo_red_light));
     }
 
