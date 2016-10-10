@@ -14,6 +14,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -40,7 +41,7 @@ import java.util.List;
  */
 public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
 
-    TextView textView;
+    ImageView emptyTask;
     MyReceiver myReceiver;
 
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -53,12 +54,13 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setBackgroundDrawableResource(R.drawable.workbg);
         setContentView(R.layout.activity_to_do_task);
 
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
 
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
-        textView = (TextView) findViewById(R.id.none_task);
+        emptyTask = (ImageView) findViewById(R.id.none_task);
         todoTaskListView = (ListView) findViewById(R.id.todo_task_list);
         databaseManager = new DatabaseManager(this);
 
@@ -147,10 +149,9 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
                     List<ToDoTask> toDoTaskList = (List<ToDoTask>) msg.obj;
                     if (toDoTaskList.size() == 0) {
                         todoTaskListView.setVisibility(View.INVISIBLE);
-                        textView.setVisibility(View.VISIBLE);
-                        textView.setText("没有任务");
+                        emptyTask.setVisibility(View.VISIBLE);
                     } else {
-                        textView.setVisibility(View.INVISIBLE);
+                        emptyTask.setVisibility(View.INVISIBLE);
                         todoTaskListView.setVisibility(View.VISIBLE);
                         toDoTaskAdapter = new ToDoTaskAdapter(ToDoTaskActivity.this, toDoTaskList,
                                 R.layout.todo_task_item, databaseManager, sharedPreferences);
@@ -159,7 +160,7 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
                     }
                     break;
                 case 2: //获取任务失败
-                    Snackbar.make(textView, "获取任务失败、请下拉重新获取", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(emptyTask, "获取任务失败、请下拉重新获取", Snackbar.LENGTH_LONG).show();
                     break;
                 default:
                     break;

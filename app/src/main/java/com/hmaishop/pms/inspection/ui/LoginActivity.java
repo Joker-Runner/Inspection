@@ -11,6 +11,9 @@ import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.ProgressBar;
 
 import com.google.gson.Gson;
 import com.hmaishop.pms.inspection.R;
@@ -34,15 +37,18 @@ public class LoginActivity extends BaseActivity implements Serializable {
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-//    private ProgressBar progressBar;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.AppTheme);
-        getWindow().setBackgroundDrawableResource(R.color.colorWhite);
+//        setTheme(R.style.AppTheme);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setBackgroundDrawableResource(R.drawable.login);
         setContentView(R.layout.activity_login);
-//        progressBar = (ProgressBar) findViewById(R.id.login_progress);
+        progressBar = (ProgressBar) findViewById(R.id.login_progress);
 
         deviceId = ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).getDeviceId();
         Log.d("TAG", "" + deviceId);

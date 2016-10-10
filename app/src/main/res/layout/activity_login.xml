@@ -21,8 +21,19 @@
         android:layout_centerVertical="true"
         android:layout_margin="@dimen/activity_vertical_margin"
         android:text="@string/login"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/colorWhite"
         android:textSize="26sp" />
+
+    <TextView
+        android:text="水库巡查系统"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:textSize="30sp"
+        android:textColor="@color/colorWhite"
+        android:id="@+id/textView2" />
 
 
 </RelativeLayout>
