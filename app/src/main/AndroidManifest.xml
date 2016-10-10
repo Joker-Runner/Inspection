@@ -48,7 +48,8 @@
 
         <activity
             android:name=".ui.ToDoTaskActivity"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
         <activity
             android:name=".ui.MainActivity"
