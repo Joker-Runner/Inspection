@@ -35,6 +35,7 @@ import com.hmaishop.pms.inspection.bean.ToDoTask;
 import com.hmaishop.pms.inspection.database.DatabaseManager;
 import com.hmaishop.pms.inspection.util.ActivityCollector;
 import com.hmaishop.pms.inspection.util.BaseActivity;
+import com.hmaishop.pms.inspection.util.CompressPicture;
 import com.hmaishop.pms.inspection.util.Constants;
 import com.hmaishop.pms.inspection.util.HttpUtil;
 
@@ -49,8 +50,9 @@ import java.util.List;
 public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener,
         NavigationView.OnNavigationItemSelectedListener {
 
-    ImageView emptyTask;
-    MyReceiver myReceiver;
+    private ImageView nav_icon;
+    private ImageView emptyTask;
+    private MyReceiver myReceiver;
 
     private SwipeRefreshLayout swipeRefreshLayout;
     private ListView todoTaskListView;
@@ -77,14 +79,16 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
-
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
-        emptyTask = (ImageView) findViewById(R.id.none_task);
-        todoTaskListView = (ListView) findViewById(R.id.todo_task_list);
-        databaseManager = new DatabaseManager(this);
+        View headerView = navigationView.inflateHeaderView(R.layout.nav_header_main);
 
         myReceiver = new MyReceiver();
+        databaseManager = new DatabaseManager(this);
+        sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
+
+        nav_icon = (ImageView) headerView.findViewById(R.id.nav_icon);
+        emptyTask = (ImageView) findViewById(R.id.none_task);
+        todoTaskListView = (ListView) findViewById(R.id.todo_task_list);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
 
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setColorSchemeColors(
@@ -92,6 +96,16 @@ public class ToDoTaskActivity extends BaseActivity implements SwipeRefreshLayout
                 getResources().getColor(android.R.color.holo_blue_bright),
                 getResources().getColor(android.R.color.holo_green_light),
                 getResources().getColor(android.R.color.holo_red_light));
+
+        /**
+         * 设置头像，如果下载失败，则选一个默认头像
+         */
+        if (sharedPreferences.getString(Constants.CHECKER_ICON, "").equals("")) {
+            nav_icon.setImageResource(R.mipmap.ic_launcher);
+        } else {
+            nav_icon.setImageBitmap(CompressPicture.decodeSampledBitmapFromResource
+                    (sharedPreferences.getString(Constants.CHECKER_ICON, ""), 100, 100));
+        }
     }
 
     @Override

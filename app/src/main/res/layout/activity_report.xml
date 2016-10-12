@@ -9,6 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/layoutBackGround"
         android:orientation="vertical">
 
         <com.amap.api.maps.MapView
@@ -27,18 +28,40 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/layoutBackGround"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:isScrollContainer="false"
                 android:orientation="vertical">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/title_margin"
-                    android:text="坝体巡查："
-                    android:textSize="9pt" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/activity_horizontal_margin">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/circle_point_background"
+                        android:layout_margin="@dimen/title_margin"/>
+
+                    <TextView
+                        android:id="@+id/inspection_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="坝体巡查："
+                        android:textSize="9pt" />
+
+                    <TextView
+                        android:id="@+id/inspection_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2016-10-11"
+                        android:layout_marginRight="@dimen/activity_horizontal_margin"/>
+
+                </LinearLayout>
 
                 <ListView
                     android:id="@+id/task_list"

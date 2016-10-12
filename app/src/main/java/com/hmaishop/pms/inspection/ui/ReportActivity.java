@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
@@ -61,6 +62,8 @@ public class ReportActivity extends BaseActivity implements LocationSource {
     private OnLocationChangedListener mListener;
     private AMapLocation aMapLocation = null;
 
+    private TextView inspectionName;
+    private TextView inspectionTime;
     private ListView taskListView;
     private EditText editText;
     private Button taskCommit;
@@ -85,12 +88,13 @@ public class ReportActivity extends BaseActivity implements LocationSource {
         setContentView(R.layout.activity_report);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mapView = (MapView) findViewById(R.id.map_view);
-        mapView.onCreate(savedInstanceState);
+        inspectionName = (TextView) findViewById(R.id.inspection_name);
+        inspectionTime = (TextView) findViewById(R.id.inspection_time);
         taskListView = (ListView) findViewById(R.id.task_list);
         editText = (EditText) findViewById(R.id.task_remark);
         taskCommit = (Button) findViewById(R.id.task_commit);
-
+        mapView = (MapView) findViewById(R.id.map_view);
+        mapView.onCreate(savedInstanceState);
         /**
          * 坐标空
          */
@@ -128,9 +132,9 @@ public class ReportActivity extends BaseActivity implements LocationSource {
 
         Bundle bundle = getIntent().getExtras();
         subTask = (SubTask) bundle.getSerializable("subTask");
-//        if (subTask.getSubTaskTitle()!=null&&!subTask.getSubTaskTitle().equals("")) {
             setTitle(subTask.getSubTaskTitle());
-//        }
+        inspectionName.setText(subTask.getSubTaskTitle()+"巡查");
+//        inspectionTime.setText("");
         if (subTask.getRemark() != null) {
             editText.setText(subTask.getRemark());
         }
