@@ -65,7 +65,7 @@ public class SubTaskAdapter extends BaseAdapter {
         if (subTask.isHaveDone()) {
             subTaskText.setTextColor(context.getResources().getColor(R.color.colorLightGray));
         } else {
-            subTaskText.setTextColor(context.getResources().getColor(R.color.colorBlank));
+            subTaskText.setTextColor(context.getResources().getColor(R.color.colorGray));
         }
 
         subTaskText.setOnClickListener(new View.OnClickListener() {

@@ -63,13 +63,6 @@ public class ListFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_list, container, false);
         listView = (ListView) view.findViewById(R.id.task_list);
 
-//        showMain.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                mainActivity.refreshActivity(Constants.SHOW_MAIN);
-//            }
-//        });
-
         sharedPreferences = getActivity().getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);
         editor = sharedPreferences.edit();
         initSubTaskList(todoTaskId);
