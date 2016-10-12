@@ -4,10 +4,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -42,14 +45,12 @@ public class LoginActivity extends BaseActivity implements Serializable {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setTheme(R.style.AppTheme);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setBackgroundDrawableResource(R.drawable.login);
         setContentView(R.layout.activity_login);
-        progressBar = (ProgressBar) findViewById(R.id.login_progress);
 
+        progressBar = (ProgressBar) findViewById(R.id.login_progress);
+        progressBar.getIndeterminateDrawable().setColorFilter
+                (ContextCompat.getColor(this,R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
         deviceId = ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).getDeviceId();
         Log.d("TAG", "" + deviceId);
         sharedPreferences = getSharedPreferences(Constants.SHARED, Context.MODE_APPEND);

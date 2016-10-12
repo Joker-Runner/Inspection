@@ -8,7 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="LoginTheme" parent="FullScreen">
+    <style name="LoginTheme" parent="AppTheme.NoActionBar">
     <item name="android:windowNoTitle">true</item>
     <item name="android:windowBackground">@drawable/workbg</item>
     </style>

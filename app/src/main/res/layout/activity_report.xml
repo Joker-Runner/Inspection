@@ -38,7 +38,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="@dimen/activity_horizontal_margin">
+                    android:layout_marginTop="@dimen/title_margin"
+                    android:layout_marginBottom="@dimen/title_margin">
 
                     <ImageView
                         android:layout_width="18dp"
@@ -52,7 +53,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="坝体巡查："
-                        android:textSize="9pt" />
+                        android:textColor="@color/colorGray"
+                        android:textSize="10pt" />
 
                     <TextView
                         android:id="@+id/inspection_time"
@@ -74,6 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/title_margin"
                     android:text="备注："
+                    android:textColor="@color/colorGray"
                     android:textSize="9pt" />
 
                 <EditText
