@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.hmaishop.pms.inspection.R;
@@ -167,6 +168,14 @@ public class TaskAdapter extends BaseAdapter {
                 Intent intent = new Intent(context, PhotoViewActivity.class);
                 intent.putExtra("Task", task);
                 context.startActivity(intent);
+            }
+        });
+
+        viewHolder.imageSet.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Toast.makeText(context,"照片共 "+task.getPictureNum()+" 张",Toast.LENGTH_LONG).show();
+                return true;
             }
         });
 

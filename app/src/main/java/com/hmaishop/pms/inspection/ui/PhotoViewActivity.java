@@ -41,7 +41,6 @@ public class PhotoViewActivity extends BaseActivity {
         registerForContextMenu(photoWallView);
 
         task = (Task) getIntent().getSerializableExtra("Task");
-        setTitle("查看照片");
         initPhotoWall(task);
     }
 
@@ -52,12 +51,14 @@ public class PhotoViewActivity extends BaseActivity {
      */
     public void initPhotoWall(Task task) {
         photoList = databaseManager.queryPhoto(task);
+        task.setPictureNum(photoList.size());              // 删除照片后，更新照片数量
         String[] imagePaths = new String[photoList.size()];
         for (int i = 0; i < photoList.size(); i++) {
             imagePaths[i] = photoList.get(i).getPhotoId();
         }
         PhotoViewAdapter photoViewAdapter = new PhotoViewAdapter(this, 0, imagePaths, photoWallView);
         photoWallView.setAdapter(photoViewAdapter);
+        setTitle("查看照片("+task.getPictureNum()+")");     // 更新标题
     }
 
     @Override
